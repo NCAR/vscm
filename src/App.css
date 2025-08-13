@@ -9,17 +9,9 @@ body {
   font-size: 22px;
   color: #1ebcad;
 }
-.base-panel {
-  /*background-color: #fff;
-  border-radius: 20px;
-  padding: 20px;*/
-}
 #sidebar h3 {
   font-size: 14px;
   font-weight: bold;
-}
-.base-panel {
-  /*min-height: 640px;*/
 }
 .container, .col {
   padding: 0;

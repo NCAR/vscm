@@ -1,12 +1,10 @@
-import React, {Component} from 'react';
+import React from "react";
 
-class Header extends Component {
-    render() {
-      return (
-        <div className="titles">
-        </div>
-      );
-    }
-  }
+const Header = () =>
+{
+  return (
+    <div className="titles"></div>
+  );
+};
 
 export default Header;

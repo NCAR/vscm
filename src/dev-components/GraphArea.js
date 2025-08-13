@@ -1,138 +1,165 @@
-import React, {Component} from 'react';
+import React, { useEffect, useRef } from "react";
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themes_animated from "@amcharts/amcharts4/themes/animated";
 
-class GraphArea extends Component {
-   
-    componentDidMount(){
-            am4core.useTheme(am4themes_animated);
-          
-            // Create chart instance
-            var chart = am4core.create("chartdiv", am4charts.XYChart);
-            
-            // Initial data
-            chart.data = this.props.data;
-            
-            // Create axes
-            var categoryAxis = chart.xAxes.push(new am4charts.DateAxis());
-            categoryAxis.renderer.grid.template.location = 0;
-            categoryAxis.renderer.minGridDistance = 40;
-            categoryAxis.dateFormats.setKey("yyyy");
-            categoryAxis.renderer.labels.template.location = 0;
-            categoryAxis.renderer.labels.template.fontSize = 12;
-            //categoryAxis.renderer.labels.template.rotation = -90;
-            
-            
+am4core.useTheme(am4themes_animated);
 
-            // Create series
-            function createSeriesAndAxis(field, name, topMargin, bottomMargin, bulletOutline, bulletFill, bulletType) {
-              var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
-              
-              var series = chart.series.push(new am4charts.LineSeries());
-              series.dataFields.valueY = field;
-              series.dataFields.dateX = "year";
-              series.name = name;
-              series.tooltipText = "{name}: [b]{valueY}[/]";
-              series.strokeWidth = 2;
-              series.yAxis = valueAxis;
-              series.stroke = bulletOutline;
-              series.fill = bulletFill;
-              
-              valueAxis.renderer.line.strokeOpacity = 1;
-              valueAxis.renderer.line.stroke = series.stroke;
-              valueAxis.renderer.grid.template.stroke = series.stroke;
-              valueAxis.renderer.grid.template.strokeOpacity = 0.1;
-              valueAxis.renderer.labels.template.fill = series.stroke;
-              valueAxis.renderer.minGridDistance = 50;
-              valueAxis.renderer.labels.template.fontSize = 12;
-              valueAxis.align = "right";
-              
-              if (topMargin && bottomMargin) {
-                valueAxis.marginTop = 10;
-                valueAxis.marginBottom = 10;
-              }
-              else {
-                if (topMargin) {
-                  valueAxis.marginTop = 20;
-                }
-                if (bottomMargin) {
-                  valueAxis.marginBottom = 20;
-                }
-              }
+const GraphArea = ({ data }) => {
+  const chartRef = useRef(null);
 
-              switch (bulletType) {
-                case "circle":
-                  var bullet = series.bullets.push(new am4charts.CircleBullet());
-                  bullet.circle.stroke = am4core.color(bulletOutline);
-                  bullet.circle.fill = bulletFill;
-                  bullet.circle.strokeWidth = 2;
-                break;
+  useEffect(() => {
+    // Create chart instance
+    const chart = am4core.create(chartRef.current, am4charts.XYChart);
 
-                case "square":
-                  var bullet2 = series.bullets.push(new am4charts.Bullet());
-                  let square = bullet2.createChild(am4core.Rectangle);
-                  square.width = 8;
-                  square.height = 8;
-                  square.horizontalCenter = "middle";
-                  square.verticalCenter = "middle";
-                  square.stroke = bulletOutline;
-                  square.fill = bulletFill;
-                  square.strokeWidth = 2;
-                break;
+    // Initial data
+    chart.data = data;
 
-                case "triangle":
-                  var bullet3 = series.bullets.push(new am4charts.Bullet());
-                  let arrow = bullet3.createChild(am4core.Triangle);
-                  arrow.width = 10;
-                  arrow.height = 10;
-                  arrow.horizontalCenter = "middle";
-                  arrow.verticalCenter = "middle";
-                  arrow.stroke = bulletOutline;
-                  arrow.fill = bulletFill;
-                  arrow.strokeWidth = 2;
-                break;
+    // Create axes
+    const categoryAxis = chart.xAxes.push(new am4charts.DateAxis());
+    categoryAxis.renderer.grid.template.location = 0;
+    categoryAxis.renderer.minGridDistance = 40;
+    categoryAxis.dateFormats.setKey("yyyy");
+    categoryAxis.renderer.labels.template.location = 0;
+    categoryAxis.renderer.labels.template.fontSize = 12;
 
-                default:
-                break;
-              }
+    function createSeriesAndAxis(
+      field,
+      name,
+      topMargin,
+      bottomMargin,
+      bulletOutline,
+      bulletFill,
+      bulletType
+    ) {
+      const valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
 
+      const series = chart.series.push(new am4charts.LineSeries());
+      series.dataFields.valueY = field;
+      series.dataFields.dateX = "year";
+      series.name = name;
+      series.tooltipText = "{name}: [b]{valueY}[/]";
+      series.strokeWidth = 2;
+      series.yAxis = valueAxis;
+      series.stroke = bulletOutline;
+      series.fill = bulletFill;
 
-              // Create Warning Limit Guides
-              var limitGuide = valueAxis.axisRanges.create();
-                  limitGuide.value = 14.1;
-                  limitGuide.grid.stroke = "orange"
-                  limitGuide.grid.strokeOpacity = 0.6;
-                  limitGuide.label.text = "RTL";
-                  limitGuide.label.align = "right";
-                  limitGuide.label.verticalCenter = "bottom";
-                  limitGuide.label.fillOpacity = 0.8;
+      valueAxis.renderer.line.strokeOpacity = 1;
+      valueAxis.renderer.line.stroke = series.stroke;
+      valueAxis.renderer.grid.template.stroke = series.stroke;
+      valueAxis.renderer.grid.template.strokeOpacity = 0.1;
+      valueAxis.renderer.labels.template.fill = series.stroke;
+      valueAxis.renderer.minGridDistance = 50;
+      valueAxis.renderer.labels.template.fontSize = 12;
+      valueAxis.align = "right";
 
-            }
-            
-            createSeriesAndAxis("co2Emissions", "Carbon Emissions", false, true, "#007bff", "#007bff", "triangle");
-            createSeriesAndAxis("co2Concentration", "CO2 Concentration", true, true, "#444", "#000", "circle");
-            createSeriesAndAxis("tempC", "Temperature", true, false, "#6a124f", "#ff0000", "square");
+      if (topMargin && bottomMargin) {
+        valueAxis.marginTop = 10;
+        valueAxis.marginBottom = 10;
+      } else {
+        if (topMargin) valueAxis.marginTop = 20;
+        if (bottomMargin) valueAxis.marginBottom = 20;
+      }
 
-            
-            chart.legend = new am4charts.Legend();
-            //chart.legend.itemContainers.template.clickable = false;
-            //chart.legend.itemContainers.template.focusable = false;
-            //chart.legend.itemContainers.template.cursorOverStyle = am4core.MouseCursorStyle.default;
-            chart.cursor = new am4charts.XYCursor();
-            chart.leftAxesContainer.layout = "horizontal";     
+      switch (bulletType) {
+        case "circle":
+          const bullet = series.bullets.push(new am4charts.CircleBullet());
+          bullet.circle.stroke = am4core.color(bulletOutline);
+          bullet.circle.fill = bulletFill;
+          bullet.circle.strokeWidth = 2;
+          break;
+
+        case "square":
+          const bullet2 = series.bullets.push(new am4charts.Bullet());
+          const square = bullet2.createChild(am4core.Rectangle);
+          square.width = 8;
+          square.height = 8;
+          square.horizontalCenter = "middle";
+          square.verticalCenter = "middle";
+          square.stroke = bulletOutline;
+          square.fill = bulletFill;
+          square.strokeWidth = 2;
+          break;
+
+        case "triangle":
+          const bullet3 = series.bullets.push(new am4charts.Bullet());
+          const triangle = bullet3.createChild(am4core.Triangle);
+          triangle.width = 10;
+          triangle.height = 10;
+          triangle.horizontalCenter = "middle";
+          triangle.verticalCenter = "middle";
+          triangle.stroke = bulletOutline;
+          triangle.fill = bulletFill;
+          triangle.strokeWidth = 2;
+          break;
+
+        default:
+          break;
+      }
+
+      // Warning limit guide
+      const limitGuide = valueAxis.axisRanges.create();
+      limitGuide.value = 14.1;
+      limitGuide.grid.stroke = "orange";
+      limitGuide.grid.strokeOpacity = 0.6;
+      limitGuide.label.text = "RTL";
+      limitGuide.label.align = "right";
+      limitGuide.label.verticalCenter = "bottom";
+      limitGuide.label.fillOpacity = 0.8;
     }
 
-    render(){
-        return (
-            <div id="graph-area" className="col-sm-8">
-                <div className="base-panel">
-                    <div id="chartdiv"></div>
-                </div>
-            </div>
-        )
-    }
+    createSeriesAndAxis(
+      "co2Emissions",
+      "Carbon Emissions",
+      false,
+      true,
+      "#007bff",
+      "#007bff",
+      "triangle"
+    );
+    createSeriesAndAxis(
+      "co2Concentration",
+      "CO2 Concentration",
+      true,
+      true,
+      "#444",
+      "#000",
+      "circle"
+    );
+    createSeriesAndAxis(
+      "tempC",
+      "Temperature",
+      true,
+      false,
+      "#6a124f",
+      "#ff0000",
+      "square"
+    );
 
-}
+    chart.legend = new am4charts.Legend();
+    chart.cursor = new am4charts.XYCursor();
+    chart.leftAxesContainer.layout = "horizontal";
+
+    // Store chart instance for cleanup
+    //const chartId = chart.uid; // optional, for debugging
+    return () => {
+      if (chart) {
+        chart.dispose();
+      }
+    };
+  }, [data]); // Recreate chart if `data` changes
+
+  return (
+    <div id="graph-area" className="col-sm-8">
+
+        <div
+          id="chartdiv"
+          ref={chartRef}
+          style={{ width: "100%", height: "500px" }}
+        />
+      </div>
+ 
+  );
+};
 
 export default GraphArea;

@@ -1,15 +1,12 @@
-import React, {Component} from 'react';
-import './App.css';
+import React from "react";
+import "./App.css";
 
-import Header from './Header';
-import Interactive from './Interactive';
-import Footer from './Footer';
-
-
-class App extends Component {
-
-  render () {
-    return (
+import Header from "./Header";
+import Interactive from "./Interactive";
+import Footer from "./Footer";
+const App = () =>
+{
+  return (
       <div className="App">
         <Header/>
       <div id="vscm">
@@ -20,7 +17,5 @@ class App extends Component {
         <Footer/>
     </div>
   )
-  }
-}
-
+};
 export default App;
