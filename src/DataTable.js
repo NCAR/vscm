@@ -5,17 +5,29 @@ const DataTable = ({ data }) => {
     <div className="base-panel data-table">
       <table className="table">
         <caption>
-          Climate data from 1960 onward, showing CO<sub>2</sub> emissions,
-          concentrations, and temperatures.
+          Climate data from 1960 onward, showing Carbon emissions, CO
+          <sub>2</sub> concentrations, and temperatures.
         </caption>
 
         <thead>
           <tr>
             <th scope="col">Year</th>
-            <th scope="col">CO2 Conc. (ppm)</th>
-            <th scope="col">CO2 Emiss. (GtC)</th>
-            <th scope="col">Temp &deg;C</th>
-            <th scope="col">Temp &deg;F</th>
+            <th scope="col">
+              <abbr title="carbon dioxide concentration parts per million">
+                CO<sub>2</sub> Conc (ppm)
+              </abbr>
+            </th>
+            <th scope="col">
+              <abbr title="Carbon emissions (Gigatonnes of carbon)">
+               C Emiss. (GtC)
+              </abbr>
+            </th>
+            <th scope="col">
+              <abbr title="Temperature degrees Celsius">Temp &deg;C</abbr>
+            </th>
+            <th scope="col">
+              <abbr title="Temperature degrees Fahrenheit">Temp &deg;F</abbr>
+            </th>
           </tr>
         </thead>
 

@@ -6,6 +6,9 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
   let chart = am4core.create(chartDivId, am4charts.XYChart);
   chart.paddingTop = 30;
   chart.data = data;
+  chart.readerTitle =
+    "Climate data chart showing Carbon emissions, carbon concentrations, and temperature over time.";
+  chart.focusable = false; // make the whole chart container focusable if needed
 
   let categoryAxis = chart.xAxes.push(new am4charts.DateAxis());
   categoryAxis.renderer.grid.template.location = 0.5;
@@ -41,9 +44,39 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
     series.yAxis = valueAxis;
     series.stroke = bulletOutline;
     series.fill = bulletFill;
+    series.focusable = false;
 
     series.events.on("hidden", toggleAxes);
     series.events.on("shown", toggleAxes);
+
+    // Helper to make bullets keyboard/screen-reader friendly
+    function makeBulletAccessible(bulletTemplate, series, unitLabel) {
+      // Put bullets in the tab order
+      bulletTemplate.focusable = true;
+
+      // Give bullets a non-generic role so SRs read the label
+      // (optional but helps NVDA/JAWS avoid "group")
+      bulletTemplate.role = "img";
+
+      // Per-point label derived from data item
+      bulletTemplate.adapter.add("readerTitle", (prev, target) => {
+        const di = target.dataItem;
+        if (di && di.valueY != null) {
+          // di.dateX is a Date when using DateAxis; guard in case it isn't ready
+          let yearText = "";
+          if (di.dateX instanceof Date) {
+            yearText = String(di.dateX.getFullYear());
+          } else if (di.categoryX) {
+            yearText = String(di.categoryX);
+          }
+
+          const val = Number(di.valueY).toFixed(2);
+          return `${series.name}, Year ${yearText}, ${val} ${unitLabel}`;
+        }
+        // Fallback so we never throw or return empty
+        return series.name + " data point";
+      });
+    }
 
     valueAxis.renderer.line.strokeOpacity = 1;
     valueAxis.renderer.line.stroke = series.stroke;
@@ -61,7 +94,6 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
     valueAxis.title.dx = 30;
     valueAxis.title.fontWeight = 600;
     valueAxis.align = "right";
-
 
     if (topMargin && bottomMargin) {
       valueAxis.marginTop = 10;
@@ -87,14 +119,19 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         let bullet = series.bullets.push(new am4charts.CircleBullet());
         bullet.circle.stroke = am4core.color(bulletOutline);
         bullet.circle.fill = bulletFill;
-        bullet.circle.strokeWidth = 2;
+            bullet.circle.strokeWidth = 2;
+            
+        makeBulletAccessible(bullet, series, label);
         valueAxis.max = 30;
         valueAxis.min = 0;
         valueAxis.renderer.grid.template.disabled = true;
+
         break;
       }
       case "co2Concentration": {
-        let bullet = series.bullets.push(new am4charts.Bullet());
+            let bullet = series.bullets.push(new am4charts.Bullet());
+            
+        makeBulletAccessible(bullet, series, label);
         let arrow = bullet.createChild(am4core.Triangle);
         arrow.width = 10;
         arrow.height = 10;
@@ -109,7 +146,9 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         break;
       }
       case "tempC": {
-        let bullet = series.bullets.push(new am4charts.Bullet());
+            let bullet = series.bullets.push(new am4charts.Bullet());
+            
+        makeBulletAccessible(bullet, series, label);
         let square = bullet.createChild(am4core.Rectangle);
         square.width = 8;
         square.height = 8;
@@ -119,7 +158,7 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         square.fill = bulletFill;
         square.strokeWidth = 2;
         valueAxis.max = 21;
-        valueAxis.min = 12;
+        valueAxis.min = 10;
         valueAxis.renderer.grid.template.disabled = false;
         valueAxis.renderer.labels.template.fill = series.fill;
 
@@ -139,7 +178,9 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         break;
       }
       case "tempF": {
-        let bullet = series.bullets.push(new am4charts.Bullet());
+            let bullet = series.bullets.push(new am4charts.Bullet());
+            
+        makeBulletAccessible(bullet, series, label);
         let square = bullet.createChild(am4core.Rectangle);
         square.width = 8;
         square.height = 8;
@@ -149,7 +190,7 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         square.fill = bulletFill;
         square.strokeWidth = 2;
         valueAxis.max = 69;
-        valueAxis.min = 56;
+        valueAxis.min = 50;
         valueAxis.renderer.grid.template.disabled = false;
         valueAxis.renderer.labels.template.fill = series.fill;
 
@@ -184,7 +225,7 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
   );
   createSeriesAndAxis(
     "co2Concentration",
-    "CO2 Concentration",
+    "Carbon Dioxide Concentration",
     true,
     true,
     "#444",

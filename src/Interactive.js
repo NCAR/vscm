@@ -1,18 +1,17 @@
 // Interactive.jsx
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, ChangeEvent } from "react";
 import { createChart } from "./createChart";
 import { initialData } from "./initialData";
 import DataTable from "./DataTable";
-
-
 import { withStyles } from "@mui/styles";
-
+import { styled } from "@mui/material/styles";
+import MuiInput from "@mui/material/Input";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import RotateLeft from "@mui/icons-material/RotateLeft";
 
-import { Input, Switch, Grid, Button, Checkbox, FormControlLabel, FormControl, Select, Slider, Typography, MenuItem, Box, Stack, Modal } from "@mui/material";
+import { InputLabel, Grid, Radio, RadioGroup, FormLabel, Button, Checkbox, FormControlLabel, FormControl, Select, Slider, Typography, MenuItem, Box, Stack, Modal } from "@mui/material";
 
 const GtC_per_ppmv = 2.3;
 const atmosphericFraction = 0.45;
@@ -28,15 +27,9 @@ export function fahrenheitToCelsius(f) {
   return ((f - 32) * 5) / 9;
 }
 
-const TempSwitch = withStyles({
-    switchBase: {
-        color: '#138785',
-            '&$checked': { color: '#27baaf'},
-            '&$checked + $track': { backgroundColor: '#138785'}
-    },
-    checked: {},
-    track: {},
-    })(Switch);
+const Input = styled(MuiInput)`
+  width: 55px;
+`;
 
 export default function Interactive() {
   
@@ -58,6 +51,20 @@ export default function Interactive() {
     co2: true,
     temp: true,
   });
+
+  const [value, setValue] = React.useState(30);
+
+  const handleERInputChange = (event) => {
+    setEmissionRate(event.target.value === "" ? 0 : Number(event.target.value));
+  };
+
+  const handleBlur = () => {
+    if (value < 0) {
+      setEmissionRate(0);
+    } else if (value > 30) {
+      setEmissionRate(30);
+    }
+  };
 
   useEffect(() => {
     const chart = createChart("chartdiv", data, tempScaleCelsius);
@@ -211,47 +218,81 @@ export default function Interactive() {
   }
 
   return (
-    <Box spacing={2} sx={{ padding: 2 }} >
+    <Box spacing={2} sx={{ padding: 2 }}>
       <Stack spacing={2}>
         <Stack
           direction="row"
-          spacing={5}
+          spacing={{ xs: 2, sm: 5, md: 8 }}
           sx={{
             justifyContent: "center",
             alignItems: "flex-start",
           }}
         >
-          <Typography component="div">
-            Temperature Scale:
-            <Grid component="label" container alignItems="center" spacing={1}>
-              <Grid>&deg;F</Grid>
-              <Grid>
-                <TempSwitch
-                  checked={tempScaleCelsius}
-                  value="tempScaleCelsius"
-                  onChange={() => setTempScaleCelsius((s) => !s)}
+          <FormControl component="fieldset">
+            <FormLabel id="temp-scale-label" aria-hidden="true">
+              Temperature Scale
+            </FormLabel>
+            <RadioGroup
+              aria-labelledby="temp-scale-label"
+              name="temp-scale"
+              value={tempScaleCelsius ? "celsius" : "fahrenheit"}
+              onChange={(e) =>
+                setTempScaleCelsius(e.target.value === "celsius")
+              }
+              row
+            >
+              <FormControlLabel
+                value="fahrenheit"
+                control={<Radio />}
+                label={<span aria-hidden="true">&deg;F</span>}
+                aria-label="Degrees Fahrenheit"
+              />
+              <FormControlLabel
+                value="celsius"
+                control={<Radio />}
+                label={<span aria-hidden="true">&deg;C</span>}
+                aria-label="Degrees Celsius"
+              />
+            </RadioGroup>
+          </FormControl>
+
+          <Box sx={{ width: 250 }}>
+            <FormLabel id="input-er-slider" aria-hidden="true">
+              Emissions Rate (GtC/year)
+            </FormLabel>
+            <Grid container spacing={2} sx={{ alignItems: "flex-start" }}>
+              <Grid size="grow">
+                <Slider
+                  value={emissionRate}
+                  marks
+                  min={0}
+                  max={30}
+                  step={0.5}
+                  track="inverted"
+                  aria-labelledby="input-er-slider"
+                  onChangeCommitted={(e, val) => setEmissionRate(val)}
                 />
               </Grid>
-              <Grid>&deg;C</Grid>
+              <Grid>
+                <Input
+                  value={emissionRate}
+                  onChange={handleERInputChange}
+                  onBlur={handleBlur}
+                  inputProps={{
+                    step: 0.5,
+                    min: 0,
+                    max: 30,
+                    type: "number",
+                    "aria-labelledby": "input-er",
+                  }}
+                />
+              </Grid>
             </Grid>
-          </Typography>
+          </Box>
           <FormControl>
-            <Typography gutterBottom>Emissions Rate (GtC/year)</Typography>
-            <Slider
-              value={emissionRate}
-              marks
-              min={0}
-              max={30}
-              step={0.2}
-              valueLabelDisplay="on"
-              track="inverted"
-              onChangeCommitted={(e, val) => setEmissionRate(val)}
-            />
-          </FormControl>
-          <FormControl>
-            <Typography gutterBottom>
+            <FormLabel component="legend">
               Choose which graphs to display:
-            </Typography>
+            </FormLabel>
 
             <FormControlLabel
               control={
@@ -288,9 +329,17 @@ export default function Interactive() {
           </FormControl>
 
           <FormControl>
-            <Typography gutterBottom>Change Climate Sensitivity:</Typography>
+            <FormLabel
+              aria-hidden="true"
+              component="label"
+              id="cs-selector-label"
+              htmlFor="cs-selector"
+            >
+              Change Climate Sensitivity
+            </FormLabel>
             <Select
-              labelId="cs-selector"
+              aria-labelledby="cs-selector-label"
+              labelId="cs-selector-label"
               id="cs-selector"
               value={climateSensitivity}
               onChange={handleClimateSensitivityChange}
@@ -347,7 +396,7 @@ export default function Interactive() {
           </Button>
         </Stack>
 
-        <Box id="chartdiv" sx={{ width: "100%", height: "500px"}} />
+        <Box id="chartdiv" sx={{ width: "100%", height: "500px" }} />
       </Stack>
       <div className="data-wrap col-sm-12">
         {showDataModal ? <DataTable data={data} /> : null}
@@ -360,7 +409,16 @@ export default function Interactive() {
         aria-describedby="modal-with-data-table"
       >
         <div
-          aria-live="polite"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="data-table-modal"
+          aria-describedby="modal-with-data-table"
+          tabIndex={-1} // allow programmatic focus
+          ref={(el) => {
+            if (el && showDataModal) {
+              el.focus(); // move focus into modal on open
+            }
+          }}
           style={{
             position: "absolute",
             top: "50%",
