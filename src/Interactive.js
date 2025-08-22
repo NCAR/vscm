@@ -15,6 +15,8 @@ import { Grid, Radio, RadioGroup, FormLabel, Button, Checkbox, FormControlLabel,
 const climateSensitivityInit = 3; 
 const emissionRateInit = 10.5; 
 
+
+
 function celsiusToFahrenheit(c) {
   return (c * 9) / 5 + 32;
 }
@@ -50,6 +52,16 @@ export default function Interactive() {
 
   const [value] = React.useState(30);
 
+  const buttonPlayStyle = {
+    backgroundColor: running ? "#cc0000" : "#A8C700",
+  };
+  const buttonGenericStyle = {
+    backgroundColor: "#00797c",
+  };
+  const buttonStepStyle = {
+      backgroundColor: running ? "#bbcbcb" : "#00797c",
+   };
+
   const handleERInputChange = (event) =>
   {
     let value = event.target.value === "" ? 0 : Number(event.target.value);
@@ -70,6 +82,31 @@ export default function Interactive() {
       setEmissionRate(30);
     }
   };
+
+  function toggleRunning() {
+    setRunning((prev) => !prev);
+  }
+
+  useEffect(() => {
+    if (running) {
+      // Start
+      timerRef.current = setInterval(runSimulationStep, 1000);
+    } else {
+      // Stop
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+
+    // Cleanup if component unmounts
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [running]);
 
   useEffect(() => {
     const chart = createChart("chartdiv", data, tempScaleCelsius);
@@ -195,18 +232,26 @@ export default function Interactive() {
     });
   }
 
-  function toggleRunning() {
-    setRunning((prev) => {
-      if (!prev) {
-        timerRef.current = setInterval(runSimulationStep, 1000);
-      } else {
+  useEffect(() => {
+    if (running && !timerRef.current) {
+      // Only create an interval if one doesn’t already exist
+      timerRef.current = setInterval(runSimulationStep, 1000);
+    }
+
+    if (!running && timerRef.current) {
+      // Clear interval when running stops
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    return () => {
+      // Cleanup on unmount
+      if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
-      return !prev;
-    });
-  }
-
+    };
+  }, [running]);
 
   function resetSimulation() {
     clearInterval(timerRef.current);
@@ -369,15 +414,16 @@ export default function Interactive() {
         >
           <Button
             variant="contained"
-            color="primary"
+            style={buttonStepStyle}
             title="Step Forward"
+            disabled={running}
             onClick={runSimulationStep}
           >
             <SkipNextIcon />
           </Button>
           <Button
             variant="contained"
-            color="primary"
+            style={buttonPlayStyle}
             title={running ? "Pause" : "Go"}
             onClick={toggleRunning}
           >
@@ -386,7 +432,7 @@ export default function Interactive() {
 
           <Button
             variant="contained"
-            color="primary"
+            style={buttonGenericStyle}
             title="Start Over"
             onClick={resetSimulation}
           >
@@ -394,7 +440,7 @@ export default function Interactive() {
           </Button>
           <Button
             variant="contained"
-            color="primary"
+            style={buttonGenericStyle}
             onClick={() => setShowDataModal(true)}
           >
             Show Data
