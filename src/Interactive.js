@@ -1,9 +1,8 @@
 // Interactive.jsx
-import React, { useState, useEffect, useRef, useCallback, ChangeEvent } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createChart } from "./createChart";
 import { initialData } from "./initialData";
 import DataTable from "./DataTable";
-import { withStyles } from "@mui/styles";
 import { styled } from "@mui/material/styles";
 import MuiInput from "@mui/material/Input";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
@@ -11,11 +10,8 @@ import PauseIcon from "@mui/icons-material/Pause";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import RotateLeft from "@mui/icons-material/RotateLeft";
 
-import { InputLabel, Grid, Radio, RadioGroup, FormLabel, Button, Checkbox, FormControlLabel, FormControl, Select, Slider, Typography, MenuItem, Box, Stack, Modal } from "@mui/material";
+import { Grid, Radio, RadioGroup, FormLabel, Button, Checkbox, FormControlLabel, FormControl, Select, Slider,  MenuItem, Box, Stack, Modal } from "@mui/material";
 
-const GtC_per_ppmv = 2.3;
-const atmosphericFraction = 0.45;
-const co2RemovalRate = 0.001;
 const climateSensitivityInit = 3; 
 const emissionRateInit = 10.5; 
 
@@ -52,10 +48,19 @@ export default function Interactive() {
     temp: true,
   });
 
-  const [value, setValue] = React.useState(30);
+  const [value] = React.useState(30);
 
-  const handleERInputChange = (event) => {
-    setEmissionRate(event.target.value === "" ? 0 : Number(event.target.value));
+  const handleERInputChange = (event) =>
+  {
+    let value = event.target.value === "" ? 0 : Number(event.target.value);
+    if (value < 0) {
+      setEmissionRate(0);
+    } else if (value > 30) {
+      setEmissionRate(30);
+    } else
+    {
+      setEmissionRate(value);
+    }
   };
 
   const handleBlur = () => {
