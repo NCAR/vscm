@@ -86,8 +86,8 @@ export const initialData = [
   },
   {
     year: new Date(2020, 0),
-    co2Emissions: 9.3,
-    co2Concentration: 412,
+    co2Emissions: 10.52,
+    co2Concentration: 414.21,
     tempC: 14.88,
     tempF: 58.8,
   },
