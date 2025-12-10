@@ -2,18 +2,20 @@
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 
-export function createChart(chartDivId, data, tempScaleCelsius) {
-  let chart = am4core.create(chartDivId, am4charts.XYChart);
+export function createChart(chartDivId: string,
+  data: any[],
+  tempScaleCelsius: boolean) {
+  const chart = am4core.create(chartDivId, am4charts.XYChart);
   chart.paddingTop = 30;
   chart.data = data;
   chart.readerTitle =
     "Climate data chart showing Carbon emissions, carbon concentrations, and temperature over time.";
   chart.focusable = false; // make the whole chart container focusable if needed
 
-  let categoryAxis = chart.xAxes.push(new am4charts.DateAxis());
+  const categoryAxis = chart.xAxes.push(new am4charts.DateAxis());
   categoryAxis.renderer.grid.template.location = 0.5;
   categoryAxis.renderer.minGridDistance = 40;
-  categoryAxis.dateFormats.setKey("yyyy");
+  categoryAxis.dateFormats.setKey("year", "yyyy")
   categoryAxis.renderer.labels.template.location = 0.5;
   categoryAxis.renderer.labels.template.fontSize = 12;
   categoryAxis.fillRule = function (dataItem) {
@@ -22,35 +24,38 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
       date.getFullYear() >= 1960 || date.getFullYear() <= 2010;
   };
 
-  function createSeriesAndAxis(
-    field,
-    name,
-    topMargin,
-    bottomMargin,
-    bulletOutline,
-    bulletFill,
-    label
-  ) {
-    let valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
-
-    let series = chart.series.push(new am4charts.LineSeries());
+function createSeriesAndAxis(
+  field: string,
+  name: string,
+  topMargin: boolean,
+  bottomMargin: boolean,
+  bulletOutline: string,
+  bulletFill: string,
+  label: string
+) {
+    const valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+    const series = chart.series.push(new am4charts.LineSeries());
     series.id = field;
     series.dataFields.valueY = field;
     series.dataFields.dateX = "year";
     series.name = name;
-    series.label = label;
+    //series.label = label;
     series.tooltipText = `[bold]${name}:[/] {valueY.formatNumber('###.00')} ${label}`;
     series.strokeWidth = 2;
     series.yAxis = valueAxis;
-    series.stroke = bulletOutline;
-    series.fill = bulletFill;
+    series.stroke = am4core.color(bulletOutline);
+    series.fill = am4core.color(bulletFill);
     series.focusable = false;
-
     series.events.on("hidden", toggleAxes);
     series.events.on("shown", toggleAxes);
 
     // Helper to make bullets keyboard/screen-reader friendly
-    function makeBulletAccessible(bulletTemplate, series, unitLabel) {
+   function makeBulletAccessible(
+      bulletTemplate: any,
+      series: am4charts.LineSeries,
+      unitLabel: string
+    ) {
+  
       // Put bullets in the tab order
       bulletTemplate.focusable = true;
 
@@ -59,7 +64,7 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
       bulletTemplate.role = "img";
 
       // Per-point label derived from data item
-      bulletTemplate.adapter.add("readerTitle", (prev, target) => {
+      bulletTemplate.adapter.add("readerTitle", (_: any, target: any) => {
         const di = target.dataItem;
         if (di && di.valueY != null) {
           // di.dateX is a Date when using DateAxis; guard in case it isn't ready
@@ -85,14 +90,14 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
     valueAxis.renderer.labels.template.fill = series.stroke;
     valueAxis.renderer.labels.template.fontSize = 12;
     valueAxis.title.text = `${label}`;
-    valueAxis.title.fill = bulletFill;
+    valueAxis.title.fill = am4core.color(bulletFill);
     valueAxis.title.fontSize = 10;
     valueAxis.title.rotation = 0;
     valueAxis.title.align = "right";
     valueAxis.title.valign = "bottom";
     valueAxis.title.dy = -470;
     valueAxis.title.dx = 30;
-    valueAxis.title.fontWeight = 600;
+    valueAxis.title.fontWeight = "600";
     valueAxis.align = "right";
 
     if (topMargin && bottomMargin) {
@@ -103,10 +108,11 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
       if (bottomMargin) valueAxis.marginBottom = 20;
     }
 
-    function toggleAxes(ev) {
-      let axis = ev.target.yAxis;
+    function toggleAxes(ev: any) {
+      const axis = ev.target.yAxis
       let disabled = true;
-      axis.series.each((series) => {
+     
+      axis.series.each((series: any) => {
         if (!series.isHiding && !series.isHidden) {
           disabled = false;
         }
@@ -116,10 +122,10 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
 
     switch (field) {
       case "co2Emissions": {
-        let bullet = series.bullets.push(new am4charts.CircleBullet());
+        const bullet = series.bullets.push(new am4charts.CircleBullet());
         bullet.circle.stroke = am4core.color(bulletOutline);
-        bullet.circle.fill = bulletFill;
-            bullet.circle.strokeWidth = 2;
+        bullet.circle.fill = am4core.color(bulletFill);
+        bullet.circle.strokeWidth = 2;
             
         makeBulletAccessible(bullet, series, label);
         valueAxis.max = 30;
@@ -129,16 +135,16 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         break;
       }
       case "co2Concentration": {
-            let bullet = series.bullets.push(new am4charts.Bullet());
+        const bullet = series.bullets.push(new am4charts.Bullet());
             
         makeBulletAccessible(bullet, series, label);
-        let arrow = bullet.createChild(am4core.Triangle);
+        const arrow = bullet.createChild(am4core.Triangle);
         arrow.width = 10;
         arrow.height = 10;
         arrow.horizontalCenter = "middle";
         arrow.verticalCenter = "middle";
-        arrow.stroke = bulletOutline;
-        arrow.fill = bulletFill;
+        arrow.stroke = am4core.color(bulletOutline);
+        arrow.fill = am4core.color(bulletFill);
         arrow.strokeWidth = 2;
         valueAxis.max = 932;
         valueAxis.min = 300;
@@ -146,23 +152,23 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         break;
       }
       case "tempC": {
-            let bullet = series.bullets.push(new am4charts.Bullet());
+        const bullet = series.bullets.push(new am4charts.Bullet());
             
         makeBulletAccessible(bullet, series, label);
-        let square = bullet.createChild(am4core.Rectangle);
+        const square = bullet.createChild(am4core.Rectangle);
         square.width = 8;
         square.height = 8;
         square.horizontalCenter = "middle";
         square.verticalCenter = "middle";
-        square.stroke = bulletOutline;
-        square.fill = bulletFill;
+        square.stroke = am4core.color(bulletOutline);
+        square.fill = am4core.color(bulletFill);
         square.strokeWidth = 2;
         valueAxis.max = 21;
         valueAxis.min = 10;
         valueAxis.renderer.grid.template.disabled = false;
         valueAxis.renderer.labels.template.fill = series.fill;
 
-        let limitGuide = valueAxis.axisRanges.create();
+        const limitGuide = valueAxis.axisRanges.create();
         limitGuide.value = 15.8;
         limitGuide.grid.stroke = am4core.color("red");
         limitGuide.label.fill = am4core.color("red");
@@ -178,23 +184,23 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
         break;
       }
       case "tempF": {
-            let bullet = series.bullets.push(new am4charts.Bullet());
+        const bullet = series.bullets.push(new am4charts.Bullet());
             
         makeBulletAccessible(bullet, series, label);
-        let square = bullet.createChild(am4core.Rectangle);
+        const square = bullet.createChild(am4core.Rectangle);
         square.width = 8;
         square.height = 8;
         square.horizontalCenter = "middle";
         square.verticalCenter = "middle";
-        square.stroke = bulletOutline;
-        square.fill = bulletFill;
+        square.stroke = am4core.color(bulletOutline);
+        square.fill = am4core.color(bulletFill);
         square.strokeWidth = 2;
         valueAxis.max = 69;
         valueAxis.min = 50;
         valueAxis.renderer.grid.template.disabled = false;
         valueAxis.renderer.labels.template.fill = series.fill;
 
-        let limitGuideF = valueAxis.axisRanges.create();
+        const limitGuideF = valueAxis.axisRanges.create();
         limitGuideF.value = 60.44;
         limitGuideF.grid.stroke = am4core.color("red");
         limitGuideF.label.fill = am4core.color("red");
@@ -269,7 +275,7 @@ export function createChart(chartDivId, data, tempScaleCelsius) {
   chart.cursor.lineX.fillOpacity = 0.1;
   chart.cursor.lineY.disabled = false;
 
-  let range = categoryAxis.axisRanges.create();
+  const range = categoryAxis.axisRanges.create();
   range.date = new Date(1962, 5);
   range.endDate = new Date(2022, 5);
   range.axisFill.fill = am4core.color("#a6d1ff");

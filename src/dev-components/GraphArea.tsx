@@ -1,37 +1,48 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themes_animated from "@amcharts/amcharts4/themes/animated";
 
 am4core.useTheme(am4themes_animated);
 
-const GraphArea = ({ data }) => {
-  const chartRef = useRef(null);
+type GraphAreaProps = {
+  data: any[];
+};
+
+const GraphArea = ({ data }: GraphAreaProps) => {
+  const chartRef = useRef<HTMLDivElement | null>(null);
+
 
   useEffect(() => {
+    if (!chartRef.current) {
+      return;
+    }
+
     // Create chart instance
     const chart = am4core.create(chartRef.current, am4charts.XYChart);
 
     // Initial data
     chart.data = data;
 
+
     // Create axes
     const categoryAxis = chart.xAxes.push(new am4charts.DateAxis());
     categoryAxis.renderer.grid.template.location = 0;
     categoryAxis.renderer.minGridDistance = 40;
-    categoryAxis.dateFormats.setKey("yyyy");
+    categoryAxis.dateFormats.setKey("year", "yyyy");
     categoryAxis.renderer.labels.template.location = 0;
     categoryAxis.renderer.labels.template.fontSize = 12;
 
     function createSeriesAndAxis(
-      field,
-      name,
-      topMargin,
-      bottomMargin,
-      bulletOutline,
-      bulletFill,
-      bulletType
-    ) {
+      field: any,
+      name: any,
+      topMargin: any,
+      bottomMargin: any,
+      bulletOutline: any,
+      bulletFill: any,
+      bulletType: any
+    )
+{
       const valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
 
       const series = chart.series.push(new am4charts.LineSeries());
@@ -41,8 +52,8 @@ const GraphArea = ({ data }) => {
       series.tooltipText = "{name}: [b]{valueY}[/]";
       series.strokeWidth = 2;
       series.yAxis = valueAxis;
-      series.stroke = bulletOutline;
-      series.fill = bulletFill;
+      series.stroke = am4core.color(bulletOutline);
+      series.fill = am4core.color(bulletFill);
 
       valueAxis.renderer.line.strokeOpacity = 1;
       valueAxis.renderer.line.stroke = series.stroke;
@@ -62,36 +73,39 @@ const GraphArea = ({ data }) => {
       }
 
       switch (bulletType) {
-        case "circle":
+        case "circle": {
           const bullet = series.bullets.push(new am4charts.CircleBullet());
-          bullet.circle.stroke = am4core.color(bulletOutline);
-          bullet.circle.fill = bulletFill;
+          bullet.stroke = am4core.color(bulletOutline);
+          bullet.fill = am4core.color(bulletFill);
           bullet.circle.strokeWidth = 2;
           break;
+        }
 
-        case "square":
+        case "square": {
           const bullet2 = series.bullets.push(new am4charts.Bullet());
           const square = bullet2.createChild(am4core.Rectangle);
           square.width = 8;
           square.height = 8;
           square.horizontalCenter = "middle";
           square.verticalCenter = "middle";
-          square.stroke = bulletOutline;
-          square.fill = bulletFill;
+          square.stroke = am4core.color(bulletOutline);
+          square.fill = am4core.color(bulletFill);
           square.strokeWidth = 2;
           break;
+        }
 
-        case "triangle":
+        case "triangle": {
           const bullet3 = series.bullets.push(new am4charts.Bullet());
           const triangle = bullet3.createChild(am4core.Triangle);
           triangle.width = 10;
           triangle.height = 10;
           triangle.horizontalCenter = "middle";
           triangle.verticalCenter = "middle";
-          triangle.stroke = bulletOutline;
-          triangle.fill = bulletFill;
+          triangle.stroke = am4core.color(bulletOutline);
+          triangle.fill = am4core.color(bulletFill);
           triangle.strokeWidth = 2;
           break;
+        }
 
         default:
           break;
@@ -100,7 +114,7 @@ const GraphArea = ({ data }) => {
       // Warning limit guide
       const limitGuide = valueAxis.axisRanges.create();
       limitGuide.value = 14.1;
-      limitGuide.grid.stroke = "orange";
+      limitGuide.grid.stroke = am4core.color("orange");
       limitGuide.grid.strokeOpacity = 0.6;
       limitGuide.label.text = "RTL";
       limitGuide.label.align = "right";
