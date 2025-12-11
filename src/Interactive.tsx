@@ -1,6 +1,5 @@
-// Interactive.jsx
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { createChart } from "./createChart";
+// Interactive.tsx
+import React, { useState, useEffect, useRef } from "react";
 import { initialData } from "./initialData";
 import DataTable from "./DataTable";
 import { styled } from "@mui/material/styles";
@@ -9,20 +8,33 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import RotateLeft from "@mui/icons-material/RotateLeft";
+import {
+  Grid,
+  Radio,
+  RadioGroup,
+  FormLabel,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  FormControl,
+  Select,
+  Slider,
+  MenuItem,
+  Box,
+  Stack,
+  Modal,
+} from "@mui/material";
 
-import { Grid, Radio, RadioGroup, FormLabel, Button, Checkbox, FormControlLabel, FormControl, Select, Slider,  MenuItem, Box, Stack, Modal } from "@mui/material";
+const ChartView = React.lazy(() => import("./ChartView"));
 
-const climateSensitivityInit = 3; 
-const emissionRateInit = 10.5; 
+const CLIMATE_SENSITIVITY_INIT = 3;
+const EMISSION_RATE_INIT = 10.5;
+const TIME_STEP_YEARS = 5;
+const EMISSION_MIN = 0;
+const EMISSION_MAX = 30;
 
-
-
-function celsiusToFahrenheit(c) {
+function celsiusToFahrenheit(c: number): number {
   return (c * 9) / 5 + 32;
-}
-
-export function fahrenheitToCelsius(f) {
-  return ((f - 32) * 5) / 9;
 }
 
 const Input = styled(MuiInput)`
@@ -30,16 +42,16 @@ const Input = styled(MuiInput)`
 `;
 
 export default function Interactive() {
-  
-  const chartRef = useRef(null);
-  const timerRef = useRef(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [showDataModal, setShowDataModal] = useState(false);
   const [data, setData] = useState(initialData);
   const [running, setRunning] = useState(false);
   const [tempScaleCelsius, setTempScaleCelsius] = useState(true);
-  const [emissionRate, setEmissionRate] = useState(emissionRateInit); // GtC/year
-  const [climateSensitivity, setClimateSensitivity] = useState(climateSensitivityInit); 
+  const [emissionRate, setEmissionRate] = useState(EMISSION_RATE_INIT); // GtC/year
+  const [climateSensitivity, setClimateSensitivity] = useState(
+    CLIMATE_SENSITIVITY_INIT
+  );
 
   const emissionRateRef = useRef(emissionRate);
   const climateSensitivityRef = useRef(climateSensitivity);
@@ -50,8 +62,6 @@ export default function Interactive() {
     temp: true,
   });
 
-  const [value] = React.useState(30);
-
   const buttonPlayStyle = {
     backgroundColor: running ? "#cc0000" : "#A8C700",
   };
@@ -59,130 +69,37 @@ export default function Interactive() {
     backgroundColor: "#00797c",
   };
   const buttonStepStyle = {
-      backgroundColor: running ? "#bbcbcb" : "#00797c",
-   };
+    backgroundColor: running ? "#bbcbcb" : "#00797c",
+  };
 
-  const handleERInputChange = (event) =>
-  {
-    let value = event.target.value === "" ? 0 : Number(event.target.value);
-    if (value < 0) {
-      setEmissionRate(0);
-    } else if (value > 30) {
-      setEmissionRate(30);
-    } else
-    {
-      setEmissionRate(value);
-    }
+  const handleERInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value === "" ? 0 : Number(event.target.value);
+    const clamped = Math.min(Math.max(raw, EMISSION_MIN), EMISSION_MAX);
+    setEmissionRate(clamped);
   };
 
   const handleBlur = () => {
-    if (value < 0) {
-      setEmissionRate(0);
-    } else if (value > 30) {
-      setEmissionRate(30);
+    if (emissionRate < EMISSION_MIN) {
+      setEmissionRate(EMISSION_MIN);
+    } else if (emissionRate > EMISSION_MAX) {
+      setEmissionRate(EMISSION_MAX);
     }
   };
 
-  function toggleRunning() {
+  const toggleRunning = () => {
     setRunning((prev) => !prev);
-  }
+  };
 
-  useEffect(() => {
-    if (running) {
-      // Start
-      timerRef.current = setInterval(runSimulationStep, 1000);
-    } else {
-      // Stop
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-
-    // Cleanup if component unmounts
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [running]);
-
-  useEffect(() => {
-    const chart = createChart("chartdiv", data, tempScaleCelsius);
-    chartRef.current = chart;
-
-    return () => {
-      chart.dispose();
-      chartRef.current = null;
-    };
-  }, [data, tempScaleCelsius]);
-
-  useEffect(() => {
-    if (chartRef.current) {
-      chartRef.current.data = data;
-    }
-  }, [data]);
-
-  useEffect(() => {
-    emissionRateRef.current = emissionRate;
-  }, [emissionRate]);
-
-  useEffect(() => {
-    climateSensitivityRef.current = climateSensitivity;
-  }, [climateSensitivity]);
-
-  const updateSeriesVisibility = useCallback(() => {
-    if (!chartRef.current) return;
-    const { emissions, co2, temp } = displaySeries;
-    chartRef.current.series.each((series) =>
-    {
-      if (series.id === "co2Emissions")
-      {
-        if (emissions === false)
-        {
-          series.hide();
-        } else
-        {
-          series.show()
-        }
-      } else if (series.id === "co2Concentration") {
-        if (co2 === false) {
-          series.hide();
-        } else {
-          series.show();
-        }
-      } else if (series.id === (tempScaleCelsius ? "tempC" : "tempF")) {
-        if (temp === false) {
-          series.hide();
-        } else {
-          series.show();
-        }
-      }
-    });
-  }, [displaySeries, tempScaleCelsius]);
-
-  useEffect(() => {
-    updateSeriesVisibility();
-  }, [updateSeriesVisibility]);
-
-  const handleToggleSeries = (event) =>
-  {
+  const handleToggleSeries = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = event.target;
     setDisplaySeries((prev) => ({
       ...prev,
-      [event.target.name]: event.target.checked,
+      [name]: checked,
     }));
   };
 
-  const handleClimateSensitivityChange = (event) =>
-  {
-    setClimateSensitivity(event.target.value);
-  }
-
   function runSimulationStep() {
-    setData((currentData) =>
-    {
-      let timeStep = 5; //years
+    setData((currentData) => {
       const currentEmissionRate = emissionRateRef.current;
       const currentClimateSensitivity = climateSensitivityRef.current;
       const currentDataSize = currentData.length;
@@ -192,37 +109,40 @@ export default function Interactive() {
       const baselineCO2Concentration =
         currentData[currentDataSize - 1].co2Concentration;
 
-      let currentDateSet = new Date(baselineYear + timeStep, 0); //5yr interavals set
-      let currentYearSet = currentDateSet.getFullYear();
+      const nextDate = new Date(baselineYear + TIME_STEP_YEARS, 0);
+      const nextYear = nextDate.getFullYear();
 
-
-      if (currentYearSet > 2100) {
-        clearInterval(timerRef.current);
+      if (nextYear > 2100) {
+        if (timerRef.current !== null) {
+          clearInterval(timerRef.current);
+        }
         timerRef.current = null;
         setRunning(false);
         return currentData;
       }
 
-      const atmosphericFraction = 0.45; //45% standard
-      const co2RemovalRate = 0.001; //0.1% per year
-      let GtC_per_ppmv = 2.3; // GtC (approx. 2.3 GtC per 1 ppmv)
+      const atmosphericFraction = 0.45; // 45%
+      const co2RemovalRate = 0.001; // 0.1% per year
+      const GtC_PER_PPMV = 2.13; // approx. factor
 
-      let atmosphereCO2Increase =
+      const atmosphereCO2Increase =
         (1 - atmosphericFraction) * currentEmissionRate;
 
-      let calculatedCO2Concentration =
-        baselineCO2Concentration * (1 - co2RemovalRate * timeStep) +
-        (atmosphereCO2Increase / GtC_per_ppmv) * timeStep; //Multiply by 5yr interval
-      let calculatedTemp =
+      const calculatedCO2Concentration =
+        baselineCO2Concentration * (1 - co2RemovalRate * TIME_STEP_YEARS) +
+        (atmosphereCO2Increase / GtC_PER_PPMV) * TIME_STEP_YEARS;
+
+      const calculatedTemp =
         baselineTemp +
         currentClimateSensitivity *
           Math.log2(calculatedCO2Concentration / baselineCO2Concentration);
-      let calculatedTempF = celsiusToFahrenheit(calculatedTemp);
+
+      const calculatedTempF = celsiusToFahrenheit(calculatedTemp);
 
       return [
         ...currentData,
         {
-          year: currentDateSet,
+          year: nextDate,
           co2Emissions: currentEmissionRate,
           co2Concentration: calculatedCO2Concentration,
           tempC: calculatedTemp,
@@ -233,31 +153,36 @@ export default function Interactive() {
   }
 
   useEffect(() => {
-    if (running && !timerRef.current) {
-      // Only create an interval if one doesn’t already exist
-      timerRef.current = setInterval(runSimulationStep, 1000);
+    emissionRateRef.current = emissionRate;
+  }, [emissionRate]);
+
+  useEffect(() => {
+    climateSensitivityRef.current = climateSensitivity;
+  }, [climateSensitivity]);
+
+  // Single source of truth for the timer
+  useEffect(() => {
+    if (!running) {
+      return;
     }
 
-    if (!running && timerRef.current) {
-      // Clear interval when running stops
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    const id = setInterval(runSimulationStep, 1000);
+    timerRef.current = id;
 
     return () => {
-      // Cleanup on unmount
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      clearInterval(id);
+      timerRef.current = null;
     };
   }, [running]);
 
-  function resetSimulation() {
-    clearInterval(timerRef.current);
+  const resetSimulation = () => {
+    if (timerRef.current !== null) {
+      clearInterval(timerRef.current);
+    }
     timerRef.current = null;
-    setEmissionRate(10.5);
-    setClimateSensitivity(3);
+
+    setEmissionRate(EMISSION_RATE_INIT);
+    setClimateSensitivity(CLIMATE_SENSITIVITY_INIT);
     setDisplaySeries({
       emissions: true,
       co2: true,
@@ -265,10 +190,10 @@ export default function Interactive() {
     });
     setRunning(false);
     setData(initialData);
-  }
+  };
 
   return (
-    <Box spacing={2} sx={{ padding: 2 }}>
+    <Box sx={{ p: 2 }}>
       <Stack spacing={2}>
         <Stack
           direction="row"
@@ -315,12 +240,19 @@ export default function Interactive() {
                 <Slider
                   value={emissionRate}
                   marks
-                  min={0}
-                  max={30}
+                  min={EMISSION_MIN}
+                  max={EMISSION_MAX}
                   step={0.5}
                   track="inverted"
                   aria-labelledby="input-er-slider"
-                  onChangeCommitted={(e, val) => setEmissionRate(val)}
+                  onChangeCommitted={(_, val) =>
+                    setEmissionRate(
+                      Math.min(
+                        Math.max(Number(val), EMISSION_MIN),
+                        EMISSION_MAX
+                      )
+                    )
+                  }
                 />
               </Grid>
               <Grid>
@@ -330,8 +262,8 @@ export default function Interactive() {
                   onBlur={handleBlur}
                   inputProps={{
                     step: 0.5,
-                    min: 0,
-                    max: 30,
+                    min: EMISSION_MIN,
+                    max: EMISSION_MAX,
                     type: "number",
                     "aria-labelledby": "input-er",
                   }}
@@ -339,6 +271,7 @@ export default function Interactive() {
               </Grid>
             </Grid>
           </Box>
+
           <FormControl>
             <FormLabel component="legend">
               Choose which graphs to display:
@@ -387,12 +320,13 @@ export default function Interactive() {
             >
               Change Climate Sensitivity
             </FormLabel>
-            <Select
-              aria-labelledby="cs-selector-label"
+            <Select<number>
               labelId="cs-selector-label"
               id="cs-selector"
               value={climateSensitivity}
-              onChange={handleClimateSensitivityChange}
+              onChange={(e) =>
+                setClimateSensitivity(Number(e.target.value))
+              }
             >
               <MenuItem value={2}>2 degrees Celsius</MenuItem>
               <MenuItem value={2.5}>2.5 degrees Celsius</MenuItem>
@@ -448,7 +382,16 @@ export default function Interactive() {
         </Stack>
 
         <Box id="chartdiv" sx={{ width: "100%", height: "500px" }} />
+
+        <React.Suspense fallback={null}>
+          <ChartView
+            data={data}
+            tempScaleCelsius={tempScaleCelsius}
+            displaySeries={displaySeries}
+          />
+        </React.Suspense>
       </Stack>
+
       <div className="data-wrap col-sm-12">
         {showDataModal ? <DataTable data={data} /> : null}
       </div>
@@ -464,10 +407,10 @@ export default function Interactive() {
           aria-modal="true"
           aria-labelledby="data-table-modal"
           aria-describedby="modal-with-data-table"
-          tabIndex={-1} // allow programmatic focus
+          tabIndex={-1}
           ref={(el) => {
             if (el && showDataModal) {
-              el.focus(); // move focus into modal on open
+              el.focus();
             }
           }}
           style={{
@@ -478,7 +421,7 @@ export default function Interactive() {
             width: "80%",
             backgroundColor: "white",
             padding: "20px",
-            boxShadow: 24,
+            boxShadow: "0px 4px 12px rgba(0,0,0,0.3)",
             outline: "none",
             maxHeight: "80vh",
             overflowY: "auto",

@@ -1,9 +1,9 @@
-import React from "react";
-import "./App.css";
 
 import Header from "./Header";
 import Interactive from "./Interactive";
 import Footer from "./Footer";
+import "./App.css";
+
 const App = () =>
 {
   return (

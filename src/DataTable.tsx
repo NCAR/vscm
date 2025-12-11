@@ -1,6 +1,7 @@
-import React from "react";
-
-const DataTable = ({ data }) => {
+type DataTableProps = {
+  data: any[];
+};
+const DataTable = ({ data }: DataTableProps) => {
   return (
     <div className="base-panel data-table">
       <table className="table">
@@ -32,7 +33,7 @@ const DataTable = ({ data }) => {
         </thead>
 
         <tbody>
-          {data.map((item, i) => (
+          {data.map((item: any, i: number) => (
             <tr key={i}>
               <th scope="row">{item.year.getFullYear()}</th>
               <td>{parseFloat(item.co2Concentration).toFixed(3)}</td>
