@@ -66,10 +66,10 @@ export default function Interactive() {
     backgroundColor: running ? "#cc0000" : "#A8C700",
   };
   const buttonGenericStyle = {
-    backgroundColor: "#00797c",
+    backgroundColor: "#00357A",
   };
   const buttonStepStyle = {
-    backgroundColor: running ? "#bbcbcb" : "#00797c",
+    backgroundColor: running ? "#bbcbcb" : "#00357A",
   };
 
   const handleERInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
